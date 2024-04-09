@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chat;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use App\Events\MessageCreated;
+use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
@@ -26,9 +29,19 @@ class MessageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Chat $chat)
     {
-        //
+        $message = New Message([
+            'text' => $request->input('text')
+        ]);
+
+        $message->sender()->associate(Auth::user());
+        $message->chat()->associate($chat);
+        $message->save();
+
+        event(new MessageCreated($message));
+
+        return response()->noContent();
     }
 
     /**
